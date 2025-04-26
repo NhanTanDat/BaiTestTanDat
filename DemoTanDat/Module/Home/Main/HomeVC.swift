@@ -1,10 +1,18 @@
 import UIKit
 import PhotosUI
+import AVKit
+import UniformTypeIdentifiers
 
-class HomeVC: UIViewController, UICollectionViewDataSource {
 
-    private var selectedImages: [UIImage] = []
-    private var savedFileNames: [String] = []
+protocol HomeVCDelegate: AnyObject {
+    func pushVC(at vc: UIViewController)
+    func presentVC(at vc: UIViewController)
+}
+
+class HomeVC: BaseVC, UICollectionViewDataSource, UICollectionViewDelegate {
+    
+    weak var delegate: HomeVCDelegate?
+    
     private var collectionView: UICollectionView!
 
     override func viewDidLoad() {
@@ -12,29 +20,23 @@ class HomeVC: UIViewController, UICollectionViewDataSource {
         view.backgroundColor = .white
         setupCollectionView()
         setupChooseButton()
-        loadImagesFromCache()
+        AlbumManager.shared.loadMedia()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
     }
 
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return selectedImages.count
-    }
-
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ImageCell", for: indexPath) as! ImageCell
-        cell.imageView.image = selectedImages[indexPath.item]
-
-        // Add long press gesture recognizer
-        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
-        cell.addGestureRecognizer(longPressGesture)
-        cell.isUserInteractionEnabled = true
-
-        return cell
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
     }
 
     private func setupChooseButton() {
         let button = UIButton(type: .system)
-        button.setTitle("Chọn ảnh", for: .normal)
-        button.addTarget(self, action: #selector(openPhotoPicker), for: .touchUpInside)
+        button.setTitle("Chọn ảnh / video", for: .normal)
+        button.addTarget(self, action: #selector(openPicker), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(button)
 
@@ -44,26 +46,16 @@ class HomeVC: UIViewController, UICollectionViewDataSource {
         ])
     }
 
-    @objc private func openPhotoPicker() {
-        var config = PHPickerConfiguration(photoLibrary: .shared())
-        config.selectionLimit = 0 // No selection limit
-        config.filter = .images
-
-        let picker = PHPickerViewController(configuration: config)
-        picker.delegate = self
-        present(picker, animated: true, completion: nil)
-    }
-
     private func setupCollectionView() {
         let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .vertical
         layout.itemSize = CGSize(width: 100, height: 100)
-        layout.minimumInteritemSpacing = 10
         layout.minimumLineSpacing = 10
+        layout.minimumInteritemSpacing = 10
 
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.dataSource = self
+        collectionView.delegate = self
         collectionView.register(ImageCell.self, forCellWithReuseIdentifier: "ImageCell")
         view.addSubview(collectionView)
 
@@ -75,107 +67,78 @@ class HomeVC: UIViewController, UICollectionViewDataSource {
         ])
     }
 
-    private func saveImageToCache(image: UIImage) {
-        guard let data = image.jpegData(compressionQuality: 0.8) else { return }
-        let fileName = UUID().uuidString + ".jpg"
-        let url = getDocumentsDirectory().appendingPathComponent(fileName)
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return AlbumManager.shared.mediaItems.count
+    }
 
-        do {
-            try data.write(to: url)
-            savedFileNames.append(fileName)
-        } catch {
-            print("❌ Error saving image: \(error)")
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let item = AlbumManager.shared.mediaItems[indexPath.item]
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ImageCell", for: indexPath) as! ImageCell
+        cell.indexPath = indexPath
+        cell.delegate = self
+        cell.imageView.image = item.thumbnail
+        cell.setVideoIconVisible(item.isVideo)
+        cell.setFavoriteVisible(item.isFavorite)
+        return cell
+    }
+
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let item = AlbumManager.shared.mediaItems[indexPath.item]
+        if item.isVideo {
+            let player = AVPlayer(url: item.url)
+            let vc = CustomPlayerVC()
+            vc.player = player
+            delegate?.presentVC(at: vc)
+            player.play()
+        } else {
+            let vc = ImageDetailVC(image: item.thumbnail)
+            delegate?.pushVC(at: vc)
         }
     }
+    
 
-    private func loadImagesFromCache() {
-        let fileManager = FileManager.default
-        let documentsDirectory = getDocumentsDirectory()
-        
-        do {
-            let fileURLs = try fileManager.contentsOfDirectory(at: documentsDirectory, includingPropertiesForKeys: nil)
-            
-            for fileURL in fileURLs where fileURL.pathExtension == "jpg" {
-                if let image = UIImage(contentsOfFile: fileURL.path) {
-                    selectedImages.append(image)
-                    savedFileNames.append(fileURL.lastPathComponent)
-                }
-            }
-        } catch {
-            print("❌ Error loading images: \(error)")
-        }
+    @objc private func openPicker() {
+        var config = PHPickerConfiguration()
+        config.selectionLimit = 0
+        config.filter = .any(of: [.images, .videos])
+        let picker = PHPickerViewController(configuration: config)
+        picker.delegate = self
+        present(picker, animated: true)
     }
-
-    private func getDocumentsDirectory() -> URL {
-        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-    }
-
-    @objc private func handleLongPress(_ gestureRecognizer: UILongPressGestureRecognizer) {
-        guard gestureRecognizer.state == .began else { return }
-        
-        guard let cell = gestureRecognizer.view as? ImageCell,
-              let indexPath = collectionView.indexPath(for: cell) else { return }
-
-        let fileName = savedFileNames[indexPath.item]
-
-        // Create an action sheet to show options
-        let alertController = UIAlertController(title: "Image Options", message: nil, preferredStyle: .actionSheet)
-
-        // Delete option
-        alertController.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
-            self.selectedImages.remove(at: indexPath.item)
-            self.savedFileNames.remove(at: indexPath.item)
-
-            self.collectionView.deleteItems(at: [indexPath])
-            self.deleteImageFromCache(fileName: fileName)
-           
-        }))
-
-        // Save to Favorites option
-        alertController.addAction(UIAlertAction(title: "Save to Favorites", style: .default, handler: { _ in
-            print("Image saved to favorites")
-        }))
-
-        // Cancel option
-        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-
-        present(alertController, animated: true, completion: nil)
-    }
-
-    private func deleteImageFromCache(fileName: String) {
-        let fileManager = FileManager.default
-        let documentsDirectory = getDocumentsDirectory()
-        let fileURL = documentsDirectory.appendingPathComponent(fileName)
-
-        do {
-            if fileManager.fileExists(atPath: fileURL.path) {
-                try fileManager.removeItem(at: fileURL)
-            }
-        } catch {
-            print("❌ Error deleting image: \(error)")
-        }
-    }
-
-
-  
 }
 
+// MARK: - PHPickerViewControllerDelegate
 extension HomeVC: PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
 
         for result in results {
-            guard let assetId = result.assetIdentifier else { continue }
+            let itemProvider = result.itemProvider
 
-           
-
-            if result.itemProvider.canLoadObject(ofClass: UIImage.self) {
-                result.itemProvider.loadObject(ofClass: UIImage.self) { (object, error) in
-                    if let image = object as? UIImage {
+            if itemProvider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+                itemProvider.loadObject(ofClass: UIImage.self) { object, error in
+                    guard let image = object as? UIImage else { return }
+                    if let savedUrl = AlbumManager.shared.saveImageToDisk(image) {
                         DispatchQueue.main.async {
-                            self.selectedImages.append(image)
+                            AlbumManager.shared.mediaItems.append((thumbnail: image, url: savedUrl, isVideo: false, isFavorite: false))
                             self.collectionView.reloadData()
-                            self.saveImageToCache(image: image) // Save the image to cache
+                        }
+                    }
+                }
+            }
+
+            if itemProvider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
+                itemProvider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, error in
+                    guard let url = url else { return }
+                    if let savedUrl = AlbumManager.shared.saveVideoToDisk(url) {
+                        let asset = AVAsset(url: savedUrl)
+                        let generator = AVAssetImageGenerator(asset: asset)
+                        if let cgImage = try? generator.copyCGImage(at: .zero, actualTime: nil) {
+                            let thumbnail = UIImage(cgImage: cgImage)
+                            DispatchQueue.main.async {
+                                AlbumManager.shared.mediaItems.append((thumbnail: thumbnail, url: savedUrl, isVideo: true, isFavorite: false))
+                                self.collectionView.reloadData()
+                            }
                         }
                     }
                 }
@@ -184,3 +147,33 @@ extension HomeVC: PHPickerViewControllerDelegate {
     }
 }
 
+extension HomeVC: ImageCellDelegate {
+    func didLongPress(at indexPath: IndexPath) {
+        let item = AlbumManager.shared.mediaItems[indexPath.item]
+
+        let alert = UIAlertController(title: "Tùy chọn", message: nil, preferredStyle: .actionSheet)
+
+        alert.addAction(UIAlertAction(title: "Xoá", style: .destructive, handler: { _ in
+            try? FileManager.default.removeItem(at: item.url)
+            AlbumManager.shared.mediaItems.remove(at: indexPath.item)
+            self.collectionView.deleteItems(at: [indexPath])
+            self.collectionView.reloadItems(at: [indexPath])
+        }))
+
+        if item.isFavorite {
+            alert.addAction(UIAlertAction(title: "Loại bỏ khỏi yêu thích", style: .default, handler: { _ in
+                AlbumManager.shared.removeFromFavorites(item: item)
+                self.collectionView.reloadItems(at: [indexPath])
+            }))
+        } else {
+            alert.addAction(UIAlertAction(title: "Yêu thích", style: .default, handler: { _ in
+                AlbumManager.shared.addToFavorites(item: item)
+                self.collectionView.reloadItems(at: [indexPath])
+            }))
+        }
+
+        alert.addAction(UIAlertAction(title: "Huỷ", style: .cancel))
+
+        present(alert, animated: true)
+    }
+}
