@@ -1,15 +1,21 @@
 import UIKit
+import AVKit
 
 class ImageDetailVC: UIViewController, UIScrollViewDelegate {
 
     private let scrollView = UIScrollView()
     private let imageView = UIImageView()
     private var currentIndex: Int = 0
-    private let images: [UIImage]
+    private let mediaItems: [MediaItem]
+    
+    private var playerViewController: AVPlayerViewController?
+    private let videoContainerView = UIView()
 
-    init(image: UIImage) {
-        self.images = [image]
-        self.imageView.image = image
+    typealias MediaItem = (thumbnail: UIImage, url: URL, isVideo: Bool, isFavorite: Bool)
+
+    init(mediaItems: [MediaItem], initialIndex: Int = 0) {
+        self.mediaItems = mediaItems
+        self.currentIndex = initialIndex
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -23,6 +29,9 @@ class ImageDetailVC: UIViewController, UIScrollViewDelegate {
         setupScrollView()
         setupImageView()
         setupGestures()
+        setupPlayerViewController()
+        setupVideoContainerView()
+        displayMedia(at: currentIndex)
     }
 
     private func setupScrollView() {
@@ -46,12 +55,29 @@ class ImageDetailVC: UIViewController, UIScrollViewDelegate {
         let doubleTap = UITapGestureRecognizer(target: self, action: #selector(handleDoubleTap(_:)))
         doubleTap.numberOfTapsRequired = 2
         scrollView.addGestureRecognizer(doubleTap)
+        
         let leftSwipe = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeGesture(_:)))
         leftSwipe.direction = .left
         let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeGesture(_:)))
         rightSwipe.direction = .right
         scrollView.addGestureRecognizer(leftSwipe)
         scrollView.addGestureRecognizer(rightSwipe)
+    }
+
+    private func setupPlayerViewController() {
+        playerViewController = AVPlayerViewController()
+        guard let playerVC = playerViewController else { return }
+        playerVC.view.frame = videoContainerView.bounds
+        playerVC.view.isHidden = true // Ban đầu ẩn player
+        videoContainerView.addSubview(playerVC.view)
+        addChild(playerVC)
+        playerVC.didMove(toParent: self)
+    }
+
+    private func setupVideoContainerView() {
+        videoContainerView.frame = view.bounds
+        videoContainerView.isHidden = true
+        view.addSubview(videoContainerView)
     }
 
     @objc private func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
@@ -69,17 +95,44 @@ class ImageDetailVC: UIViewController, UIScrollViewDelegate {
     }
 
     @objc private func handleSwipeGesture(_ gesture: UISwipeGestureRecognizer) {
-        guard images.count > 1 else { return }
+        guard mediaItems.count > 1 else { return }
 
         if gesture.direction == .left {
-            currentIndex = (currentIndex + 1) % images.count
+            currentIndex = (currentIndex + 1) % mediaItems.count
         } else if gesture.direction == .right {
-            currentIndex = (currentIndex - 1 + images.count) % images.count
+            currentIndex = (currentIndex - 1 + mediaItems.count) % mediaItems.count
         }
 
-        imageView.image = images[currentIndex]
-        scrollView.setZoomScale(1.0, animated: false)
+        displayMedia(at: currentIndex)
     }
+
+    private func displayMedia(at index: Int) {
+        let item = mediaItems[index]
+        
+        if item.isVideo {
+            let player = AVPlayer(url: item.url)
+            playerViewController?.player = player
+            playerViewController?.view.isHidden = false
+            videoContainerView.isHidden = false
+            player.play()
+
+            let leftSwipe = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeGesture(_:)))
+            leftSwipe.direction = .left
+            let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeGesture(_:)))
+            rightSwipe.direction = .right
+            
+            videoContainerView.addGestureRecognizer(leftSwipe)
+            videoContainerView.addGestureRecognizer(rightSwipe)
+            
+            imageView.isHidden = true
+        } else {
+            imageView.image = item.thumbnail
+            imageView.isHidden = false
+            videoContainerView.isHidden = true
+            playerViewController?.view.isHidden = true
+        }
+    }
+
 
     // MARK: - UIScrollViewDelegate
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {

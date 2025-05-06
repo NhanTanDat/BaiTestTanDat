@@ -33,6 +33,7 @@ class MainTabBarVC: UITabBarController {
         self.navigationController?.setNavigationBarHidden(false, animated: false)
     }
 }
+
 extension MainTabBarVC: FeedVCDelegate,HomeVCDelegate {
     func presentVC(at vc: UIViewController) {
         self.present(vc, animated: true, completion: nil)

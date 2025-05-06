@@ -1,5 +1,3 @@
-
-
 import Foundation
 import AVKit
 
@@ -40,7 +38,7 @@ class AlbumManager {
         let url = getDocumentsDirectory().appendingPathComponent(UUID().uuidString + ".jpg")
         do {
             try data.write(to: url)
-            return url
+            return url 
         } catch {
             print("Error \(error)")
             return nil
@@ -92,8 +90,13 @@ class AlbumManager {
     }
 
     func deleteItem(at index: Int) {
+        guard mediaItems.indices.contains(index) else {
+            print("Cannot delete. Index \(index) is out of bounds.")
+            return
+        }
+
         let item = mediaItems[index]
-        try? FileManager.default.removeItem(at: item.url)
+        try? FileManager.default.removeItem(at: item.url)  // Chỉ xóa URL
         mediaItems.remove(at: index)
     }
 
@@ -128,3 +131,4 @@ class AlbumManager {
         return Set(list)
     }
 }
+

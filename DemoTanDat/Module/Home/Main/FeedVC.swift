@@ -6,16 +6,17 @@ protocol FeedVCDelegate: AnyObject {
     func presentVC(at vc: UIViewController)
 }
 
-class FeedVC: BaseVC, UICollectionViewDataSource, UICollectionViewDelegate {
+class FeedVC: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     
     weak var delegate: FeedVCDelegate?
     
-    private var mediaItems: [(thumbnail: UIImage, url: URL, isVideo: Bool)] = []
+    private var mediaItems: [(thumbnail: UIImage, url: URL, isVideo: Bool, isFavorite: Bool)] = []
     private var collectionView: UICollectionView!
     private var currentPlayerLayer: AVPlayerLayer?
     private var currentPlayer: AVPlayer?
     private var currentPlayingIndexPath: IndexPath?
-    
+    private var playbackWorkItem: DispatchWorkItem?
+
     @objc private func favoritesUpdated() {
         loadSavedMedia()
     }
@@ -30,30 +31,36 @@ class FeedVC: BaseVC, UICollectionViewDataSource, UICollectionViewDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.navigationController?.setNavigationBarHidden(true, animated: false)
+        navigationController?.setNavigationBarHidden(true, animated: false)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        self.navigationController?.setNavigationBarHidden(false, animated: false)
-        
-        // Dừng video khi chuyển ra khỏi màn hình
+        navigationController?.setNavigationBarHidden(false, animated: false)
         stopCurrentVideo()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     private func loadSavedMedia() {
-        mediaItems.removeAll()  // Clear trước
+        mediaItems.removeAll()
         let files = try? FileManager.default.contentsOfDirectory(at: getFavoritesDirectory(), includingPropertiesForKeys: nil)
-
+        
         files?.forEach { file in
             if file.pathExtension == "jpg", let image = UIImage(contentsOfFile: file.path) {
-                mediaItems.append((thumbnail: image, url: file, isVideo: false))
+                if let resizedImage = resizeImage(image: image, targetSize: CGSize(width: 200, height: 200)) {
+                    mediaItems.append((thumbnail: resizedImage, url: file, isVideo: false, isFavorite: true))
+                }
             } else if file.pathExtension == "mov" {
                 let asset = AVAsset(url: file)
                 let generator = AVAssetImageGenerator(asset: asset)
                 if let cgImage = try? generator.copyCGImage(at: .zero, actualTime: nil) {
                     let thumbnail = UIImage(cgImage: cgImage)
-                    mediaItems.append((thumbnail: thumbnail, url: file, isVideo: true))
+                    if let resizedImage = resizeImage(image: thumbnail, targetSize: CGSize(width: 200, height: 200)) {
+                        mediaItems.append((thumbnail: resizedImage, url: file, isVideo: true, isFavorite: true))
+                    }
                 }
             }
         }
@@ -62,24 +69,19 @@ class FeedVC: BaseVC, UICollectionViewDataSource, UICollectionViewDelegate {
             self.collectionView.reloadData()
         }
     }
-    
+
     private func getFavoritesDirectory() -> URL {
         let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let favoritesURL = documentsURL.appendingPathComponent("Favorites")
-
         if !FileManager.default.fileExists(atPath: favoritesURL.path) {
             try? FileManager.default.createDirectory(at: favoritesURL, withIntermediateDirectories: true)
         }
-
         return favoritesURL
     }
 
     private func setupCollectionView() {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
-        layout.itemSize = CGSize(width: view.frame.width - 40, height: (view.frame.width - 40) * 0.75)
-        layout.minimumLineSpacing = 10
-        layout.minimumInteritemSpacing = 10
 
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
@@ -96,25 +98,17 @@ class FeedVC: BaseVC, UICollectionViewDataSource, UICollectionViewDelegate {
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let item = mediaItems[indexPath.item]
-        if item.isVideo {
-            let player = AVPlayer(url: item.url)
-            let vc = CustomPlayerVC()
-            vc.player = player
-            delegate?.presentVC(at: vc)
-            player.play()
-        } else {
-            let vc = ImageDetailVC(image: item.thumbnail)
-            delegate?.pushVC(at: vc) 
-        }
+        stopCurrentVideo()
+        let viewerVC = ImageDetailVC(mediaItems: mediaItems, initialIndex: indexPath.item)
+        delegate?.pushVC(at: viewerVC)
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return mediaItems.count
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let item = mediaItems[indexPath.item]
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "FeedCell", for: indexPath) as! FeedCell
@@ -123,8 +117,9 @@ class FeedVC: BaseVC, UICollectionViewDataSource, UICollectionViewDelegate {
         return cell
     }
 
-    private func getDocumentsDirectory() -> URL {
-        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let width = view.frame.width - 40
+        return CGSize(width: width, height: width * 1.5)
     }
 
     private func playVideo(at indexPath: IndexPath) {
@@ -133,49 +128,76 @@ class FeedVC: BaseVC, UICollectionViewDataSource, UICollectionViewDelegate {
 
         stopCurrentVideo()
 
-        let cell = collectionView.cellForItem(at: indexPath) as! FeedCell
+        guard let cell = collectionView.cellForItem(at: indexPath) as? FeedCell else { return }
+
         currentPlayer = AVPlayer(url: item.url)
         currentPlayerLayer = AVPlayerLayer(player: currentPlayer)
-        currentPlayerLayer?.frame = cell.bounds
+        currentPlayerLayer?.frame = cell.playerView.bounds
         currentPlayerLayer?.videoGravity = .resizeAspectFill
-        cell.layer.addSublayer(currentPlayerLayer!)
+
+        if let layer = currentPlayerLayer {
+            cell.playerView.layer.addSublayer(layer)
+        }
 
         currentPlayer?.play()
         currentPlayingIndexPath = indexPath
     }
 
     private func stopCurrentVideo() {
-        // Dừng video hiện tại nếu có
         currentPlayer?.pause()
-        currentPlayerLayer?.removeFromSuperlayer()
         currentPlayer = nil
+        currentPlayerLayer?.removeFromSuperlayer()
         currentPlayerLayer = nil
         currentPlayingIndexPath = nil
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let visibleCells = collectionView.visibleCells
-        let collectionViewCenter = scrollView.bounds.midY
+        playbackWorkItem?.cancel()
 
-        for cell in visibleCells {
-            guard let indexPath = collectionView.indexPath(for: cell) else { continue }
-            let item = mediaItems[indexPath.item]
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            let visibleCells = self.collectionView.visibleCells
+            let collectionViewCenter = scrollView.bounds.midY
 
-            if item.isVideo {
-                
-                let cellFrame = collectionView.layoutAttributesForItem(at: indexPath)?.frame ?? .zero
+            for cell in visibleCells {
+                guard let indexPath = self.collectionView.indexPath(for: cell) else { continue }
+                let item = self.mediaItems[indexPath.item]
+                guard item.isVideo else { continue }
+
+                let cellFrame = self.collectionView.layoutAttributesForItem(at: indexPath)?.frame ?? .zero
                 let cellCenterY = cellFrame.midY
                 let threshold: CGFloat = 0.5
-                let distanceFromCenter = abs(collectionViewCenter - cellCenterY)
+                let distance = abs(collectionViewCenter - cellCenterY)
                 let screenHeight = scrollView.bounds.height
 
-                if distanceFromCenter < screenHeight * threshold && currentPlayingIndexPath != indexPath {
-                    playVideo(at: indexPath)
-                } else if distanceFromCenter > screenHeight * threshold && currentPlayingIndexPath == indexPath {
-                    stopCurrentVideo()
+                if distance < screenHeight * threshold, self.currentPlayingIndexPath != indexPath {
+                    self.playVideo(at: indexPath)
+                } else if distance > screenHeight * threshold, self.currentPlayingIndexPath == indexPath {
+                    self.stopCurrentVideo()
                 }
             }
         }
+
+        playbackWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: workItem)
+    }
+
+    private func resizeImage(image: UIImage, targetSize: CGSize) -> UIImage? {
+        let size = image.size
+        let widthRatio  = targetSize.width  / size.width
+        let heightRatio = targetSize.height / size.height
+
+        // Tính toán tỷ lệ sao cho ảnh không bị méo
+        let scaleFactor = min(widthRatio, heightRatio)
+        let newSize = CGSize(width: size.width * scaleFactor, height: size.height * scaleFactor)
+
+        // Vẽ ảnh mới với kích thước đã thay đổi
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
+        image.draw(in: CGRect(origin: .zero, size: newSize))
+        let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return resizedImage
     }
 }
 

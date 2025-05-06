@@ -83,17 +83,8 @@ class HomeVC: BaseVC, UICollectionViewDataSource, UICollectionViewDelegate {
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let item = AlbumManager.shared.mediaItems[indexPath.item]
-        if item.isVideo {
-            let player = AVPlayer(url: item.url)
-            let vc = CustomPlayerVC()
-            vc.player = player
-            delegate?.presentVC(at: vc)
-            player.play()
-        } else {
-            let vc = ImageDetailVC(image: item.thumbnail)
-            delegate?.pushVC(at: vc)
-        }
+        let viewerVC = ImageDetailVC(mediaItems: AlbumManager.shared.mediaItems, initialIndex: indexPath.item)
+        delegate?.pushVC(at: viewerVC)
     }
     
 
@@ -131,11 +122,13 @@ extension HomeVC: PHPickerViewControllerDelegate {
                 itemProvider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, error in
                     guard let url = url else { return }
                     if let savedUrl = AlbumManager.shared.saveVideoToDisk(url) {
+                        // Tạo thumbnail từ video sau khi lưu
                         let asset = AVAsset(url: savedUrl)
                         let generator = AVAssetImageGenerator(asset: asset)
                         if let cgImage = try? generator.copyCGImage(at: .zero, actualTime: nil) {
                             let thumbnail = UIImage(cgImage: cgImage)
                             DispatchQueue.main.async {
+                                // Lưu URL video thay vì video trực tiếp
                                 AlbumManager.shared.mediaItems.append((thumbnail: thumbnail, url: savedUrl, isVideo: true, isFavorite: false))
                                 self.collectionView.reloadData()
                             }
@@ -149,16 +142,24 @@ extension HomeVC: PHPickerViewControllerDelegate {
 
 extension HomeVC: ImageCellDelegate {
     func didLongPress(at indexPath: IndexPath) {
+        
+        guard AlbumManager.shared.mediaItems.indices.contains(indexPath.item) else {
+                print("Index \(indexPath.item) is out of range.")
+                return
+        }
+
         let item = AlbumManager.shared.mediaItems[indexPath.item]
 
         let alert = UIAlertController(title: "Tùy chọn", message: nil, preferredStyle: .actionSheet)
 
         alert.addAction(UIAlertAction(title: "Xoá", style: .destructive, handler: { _ in
-            try? FileManager.default.removeItem(at: item.url)
-            AlbumManager.shared.mediaItems.remove(at: indexPath.item)
-            self.collectionView.deleteItems(at: [indexPath])
-            self.collectionView.reloadItems(at: [indexPath])
-        }))
+                   self.collectionView.performBatchUpdates({
+                       AlbumManager.shared.deleteItem(at: indexPath.item)
+                       self.collectionView.deleteItems(at: [indexPath])
+                   }, completion: { finished in
+                       self.collectionView.reloadData()
+                   })
+               }))
 
         if item.isFavorite {
             alert.addAction(UIAlertAction(title: "Loại bỏ khỏi yêu thích", style: .default, handler: { _ in

@@ -1,42 +1,50 @@
 import UIKit
-import AVKit
 
 class FeedCell: UICollectionViewCell {
+    
     let imageView = UIImageView()
     let videoIcon = UIImageView()
-    let playerContainerView = UIView() 
+    let playerView = UIView()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
 
+        contentView.addSubview(imageView)
+        contentView.addSubview(playerView)
+        contentView.addSubview(videoIcon)
+
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
-        contentView.addSubview(imageView)
-        contentView.addSubview(videoIcon)
-        contentView.addSubview(playerContainerView)
 
-        imageView.translatesAutoresizingMaskIntoConstraints = false
+        playerView.backgroundColor = .clear
+        playerView.isUserInteractionEnabled = false
+
+        videoIcon.image = UIImage(systemName: "video.fill")
+        videoIcon.tintColor = .white
         videoIcon.translatesAutoresizingMaskIntoConstraints = false
-        playerContainerView.translatesAutoresizingMaskIntoConstraints = false
+
+        imageView.frame = contentView.bounds
+        playerView.frame = contentView.bounds
 
         NSLayoutConstraint.activate([
-            imageView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            imageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            imageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            imageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-
-            videoIcon.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
-            videoIcon.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
+            videoIcon.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
+            videoIcon.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
             videoIcon.widthAnchor.constraint(equalToConstant: 24),
             videoIcon.heightAnchor.constraint(equalToConstant: 24),
-
-            playerContainerView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            playerContainerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            playerContainerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            playerContainerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
         ])
-        playerContainerView.backgroundColor = .clear
-        playerContainerView.isUserInteractionEnabled = false 
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        imageView.image = nil
+
+        videoIcon.isHidden = true
+        playerView.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
+    }
+
+    func configure(with image: UIImage?, isVideo: Bool) {
+        imageView.image = image
+        videoIcon.isHidden = !isVideo
     }
 
     required init?(coder: NSCoder) {
