@@ -17,6 +17,7 @@ class FeedNewZaloVC: BaseVC {
         setupHeader()
         setupTableView()
         tableView.register(UserPostActionCell.self, forCellReuseIdentifier: UserPostActionCell.identifier)
+        tableView.register(SnapshotCell.self, forCellReuseIdentifier: SnapshotCell.identifier)
         
     }
 
@@ -58,14 +59,34 @@ class FeedNewZaloVC: BaseVC {
 
 extension FeedNewZaloVC: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 1
+        return 2
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: UserPostActionCell.identifier, for: indexPath) as? UserPostActionCell else {
-            return UITableViewCell()
+        if indexPath.row == 0 {
+            // cell đầu tiên: UserPostActionCell
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: UserPostActionCell.identifier, for: indexPath) as? UserPostActionCell else {
+                return UITableViewCell()
+            }
+            return cell
+        } else {
+            // cell Snapshot
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: SnapshotCell.identifier, for: indexPath) as? SnapshotCell else {
+                return UITableViewCell()
+            }
+
+            // Demo data
+            let items = (1...4).map { i in
+                SnapshotItem(
+                    image: UIImage(named: "img\(i)") ?? UIImage(systemName: "photo")!,
+                    avatar: UIImage(systemName: "person.circle.fill")!,
+                    name: "User \(i)"
+                )
+            }
+            cell.configure(with: items)
+            return cell
         }
-        return cell
-        
     }
+
+
 }
