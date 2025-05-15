@@ -8,19 +8,24 @@ class MainTabBarVC: UITabBarController {
 
         let feedVC = FeedVC()
         feedVC.delegate = self
-        feedVC.tabBarItem = UITabBarItem(title: "Yêu thích", image: UIImage(systemName: "heart.fill"), tag: 0)
+        feedVC.tabBarItem = UITabBarItem(title: "Yêu thích", image: UIImage(systemName: "heart.fill"), tag: 2)
 
         let homeVC = HomeVC()
         homeVC.delegate = self
         homeVC.tabBarItem = UITabBarItem(title: "Album", image: UIImage(systemName: "photo.on.rectangle"), tag: 1)
+        
+        let feedNewZaloVC = FeedNewZaloVC()
+        feedNewZaloVC.tabBarItem = UITabBarItem(title: "Memory", image: UIImage(systemName: "clock"), tag: 0)
 
         let feedNav = UINavigationController(rootViewController: feedVC)
         let homeNav = UINavigationController(rootViewController: homeVC)
+        let feedNewZaloNav = UINavigationController(rootViewController: feedNewZaloVC)
 
-        viewControllers = [feedNav, homeNav]
+        viewControllers = [feedNewZaloNav, feedNav, homeNav]
         
         tabBar.tintColor = .systemBlue
-        tabBar.barTintColor = .white 
+        tabBar.barTintColor = .white
+        tabBar.backgroundColor = .white
     }
     
     override func viewWillAppear(_ animated: Bool) {
