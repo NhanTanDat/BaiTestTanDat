@@ -90,7 +90,7 @@ class SnapshotItemView: UIView {
         ringLayer.path = circlePath.cgPath
         ringLayer.fillColor = UIColor.clear.cgColor
         ringLayer.strokeColor = UIColor.blue.cgColor
-        ringLayer.lineWidth = 2
+        ringLayer.lineWidth = 1.5
         
         avatarContainerView.layer.insertSublayer(ringLayer, at: 0)
 

@@ -26,6 +26,13 @@
 		04CBCF742DBA326F00A86402 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 04CBCF6F2DBA326F00A86402 /* LaunchScreen.storyboard */; };
 		04CBCF752DBA326F00A86402 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04CBCF6B2DBA326F00A86402 /* AppDelegate.swift */; };
 		04CBCF762DBA326F00A86402 /* HomeVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04CBCF702DBA326F00A86402 /* HomeVC.swift */; };
+		04F1C93D2DD6CF6F00960E63 /* CustomTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F1C93C2DD6CF6900960E63 /* CustomTabView.swift */; };
+		04F1C93F2DD6E27600960E63 /* PostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F1C93E2DD6E27200960E63 /* PostCell.swift */; };
+		04F1C9442DD7015700960E63 /* PostModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F1C9432DD7013E00960E63 /* PostModel.swift */; };
+		04F1C9462DD701AA00960E63 /* PostHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F1C9452DD7019A00960E63 /* PostHeaderView.swift */; };
+		04F1C9482DD701D300960E63 /* ExpandableTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F1C9472DD701D000960E63 /* ExpandableTextView.swift */; };
+		04F1C94A2DD701FA00960E63 /* LinkPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F1C9492DD701F500960E63 /* LinkPreviewView.swift */; };
+		04F1C94C2DD7021200960E63 /* LikeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04F1C94B2DD7021000960E63 /* LikeView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -50,6 +57,13 @@
 		04CBCF6D2DBA326F00A86402 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		04CBCF6E2DBA326F00A86402 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		04CBCF702DBA326F00A86402 /* HomeVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeVC.swift; sourceTree = "<group>"; };
+		04F1C93C2DD6CF6900960E63 /* CustomTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabView.swift; sourceTree = "<group>"; };
+		04F1C93E2DD6E27200960E63 /* PostCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostCell.swift; sourceTree = "<group>"; };
+		04F1C9432DD7013E00960E63 /* PostModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostModel.swift; sourceTree = "<group>"; };
+		04F1C9452DD7019A00960E63 /* PostHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostHeaderView.swift; sourceTree = "<group>"; };
+		04F1C9472DD701D000960E63 /* ExpandableTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableTextView.swift; sourceTree = "<group>"; };
+		04F1C9492DD701F500960E63 /* LinkPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkPreviewView.swift; sourceTree = "<group>"; };
+		04F1C94B2DD7021000960E63 /* LikeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LikeView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +105,7 @@
 		04B514E82DD5953500C62196 /* FeedNewZalo */ = {
 			isa = PBXGroup;
 			children = (
+				04F1C9422DD7013700960E63 /* Model */,
 				04B514EA2DD5956C00C62196 /* View */,
 				04B514E92DD5955600C62196 /* Manager */,
 			);
@@ -108,6 +123,11 @@
 		04B514EA2DD5956C00C62196 /* View */ = {
 			isa = PBXGroup;
 			children = (
+				04F1C94B2DD7021000960E63 /* LikeView.swift */,
+				04F1C9492DD701F500960E63 /* LinkPreviewView.swift */,
+				04F1C9472DD701D000960E63 /* ExpandableTextView.swift */,
+				04F1C9452DD7019A00960E63 /* PostHeaderView.swift */,
+				04F1C93E2DD6E27200960E63 /* PostCell.swift */,
 				04B514F52DD5DDCE00C62196 /* SnapshotItemView.swift */,
 				04B514F22DD5D96A00C62196 /* SnapshotCell.swift */,
 				04B514F02DD5A2A600C62196 /* UserPostActionCell.swift */,
@@ -189,9 +209,18 @@
 		04CBCF792DBA32E100A86402 /* Tabbar */ = {
 			isa = PBXGroup;
 			children = (
+				04F1C93C2DD6CF6900960E63 /* CustomTabView.swift */,
 				0436BD7E2DBCA00A0022B317 /* MainTabBarVC.swift */,
 			);
 			path = Tabbar;
+			sourceTree = "<group>";
+		};
+		04F1C9422DD7013700960E63 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				04F1C9432DD7013E00960E63 /* PostModel.swift */,
+			);
+			path = Model;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -268,21 +297,28 @@
 			buildActionMask = 2147483647;
 			files = (
 				0436BD872DBCB1630022B317 /* CustomPlayerVC.swift in Sources */,
+				04F1C9442DD7015700960E63 /* PostModel.swift in Sources */,
 				0436BD932DBCCED30022B317 /* AlbumManager.swift in Sources */,
 				04B514ED2DD5959200C62196 /* FeedNewZaloVC.swift in Sources */,
 				04B514F12DD5A2AB00C62196 /* UserPostActionCell.swift in Sources */,
+				04F1C9462DD701AA00960E63 /* PostHeaderView.swift in Sources */,
 				04CBCF752DBA326F00A86402 /* AppDelegate.swift in Sources */,
 				0436BD832DBCA7DC0022B317 /* FeedVC.swift in Sources */,
+				04F1C93D2DD6CF6F00960E63 /* CustomTabView.swift in Sources */,
+				04F1C94C2DD7021200960E63 /* LikeView.swift in Sources */,
+				04F1C9482DD701D300960E63 /* ExpandableTextView.swift in Sources */,
 				0436BD7F2DBCA00F0022B317 /* MainTabBarVC.swift in Sources */,
 				0436BD8A2DBCB24C0022B317 /* FavoriteManager.swift in Sources */,
 				04BE06F02DBBB0EA00DEAD96 /* ImageDetailVC.swift in Sources */,
 				0436BD912DBCCD470022B317 /* BaseVC.swift in Sources */,
 				0436BD852DBCA9B20022B317 /* FeedCell.swift in Sources */,
+				04F1C93F2DD6E27600960E63 /* PostCell.swift in Sources */,
 				04CBCF762DBA326F00A86402 /* HomeVC.swift in Sources */,
 				04B514EF2DD5996A00C62196 /* HeaderReseachView.swift in Sources */,
 				04B514F32DD5D96D00C62196 /* SnapshotCell.swift in Sources */,
 				04BE06EC2DBB9C4B00DEAD96 /* ImageCell.swift in Sources */,
 				0436BD8E2DBCB2830022B317 /* MediaItem.swift in Sources */,
+				04F1C94A2DD701FA00960E63 /* LinkPreviewView.swift in Sources */,
 				04B514F62DD5DDD000C62196 /* SnapshotItemView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

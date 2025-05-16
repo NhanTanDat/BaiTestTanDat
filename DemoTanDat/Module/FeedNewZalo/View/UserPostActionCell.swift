@@ -6,7 +6,7 @@ class UserPostActionCell: UITableViewCell {
     
     let imgAvatar: UIImageView = {
         let imgView = UIImageView()
-        imgView.image = UIImage(systemName: "person.circle")
+        imgView.image = UIImage(named: "a1")
         imgView.tintColor = .systemBlue
         imgView.contentMode = .scaleAspectFill
         imgView.clipsToBounds = true
