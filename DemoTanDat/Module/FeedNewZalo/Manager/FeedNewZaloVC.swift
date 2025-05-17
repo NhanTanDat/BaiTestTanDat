@@ -75,7 +75,7 @@ class FeedNewZaloVC: BaseVC {
 extension FeedNewZaloVC: UITableViewDelegate, UITableViewDataSource, PostCellDelegate {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 3
+        return 10
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -119,7 +119,7 @@ extension FeedNewZaloVC: UITableViewDelegate, UITableViewDataSource, PostCellDel
             cell.configure(with: snapshotData)
             return cell
 
-        } else if indexPath.row == 2 {
+        } else{
             guard let cell = tableView.dequeueReusableCell(withIdentifier: PostCell.identifier, for: indexPath) as? PostCell else {
                 return UITableViewCell()
             }
@@ -128,8 +128,6 @@ extension FeedNewZaloVC: UITableViewDelegate, UITableViewDataSource, PostCellDel
             cell.configure(with: posts[0])
             return cell
         }
-
-        return UITableViewCell()
     }
 
     func didUpdateCell(_ cell: PostCell) {

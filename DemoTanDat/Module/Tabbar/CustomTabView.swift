@@ -25,7 +25,7 @@ class CustomTabView: UIView {
         imageView.translatesAutoresizingMaskIntoConstraints = false
 
         titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 14)
+        titleLabel.font = UIFont.systemFont(ofSize: 12)
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
 
@@ -34,9 +34,9 @@ class CustomTabView: UIView {
 
         NSLayoutConstraint.activate([
             imageView.centerXAnchor.constraint(equalTo: centerXAnchor),
-            imageView.topAnchor.constraint(equalTo: topAnchor, constant: 14),
-            imageView.widthAnchor.constraint(equalToConstant: 30),
-            imageView.heightAnchor.constraint(equalToConstant: 30),
+            imageView.topAnchor.constraint(equalTo: topAnchor, constant: 12),
+            imageView.widthAnchor.constraint(equalToConstant: 24),
+            imageView.heightAnchor.constraint(equalToConstant: 24),
 
             titleLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 4),
             titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -61,16 +61,16 @@ class CustomTabView: UIView {
 
         NSLayoutConstraint.activate([
             badgeLabel.topAnchor.constraint(equalTo: imageView.topAnchor, constant: -6),
-            badgeLabel.trailingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 15),
+            badgeLabel.trailingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 18),
             badgeLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 30),
             badgeLabel.heightAnchor.constraint(equalToConstant: 20)
         ])
     }
 
-    func setBadge(count: Int) {
-        if count > 0 {
+    func setBadge(text: String) {
+        if text.count > 0 {
             badgeLabel.isHidden = false
-            badgeLabel.text = count > 99 ? "99+" : "\(count)"
+            badgeLabel.text = text 
         } else {
             badgeLabel.isHidden = true
         }

@@ -2,31 +2,34 @@ import UIKit
 
 class MainTabBarVC: UIViewController {
 
-    private let memoryVC = FeedNewZaloVC()
-    private let favoriteVC = FeedVC()
-    private let homeVC = HomeVC()
+    private let messagesVC = FeedNewZaloVC()
+    private let contactsVC = FeedNewZaloVC()
+    private let discoveryVC = FeedVC()
+    private let timelineVC = FeedNewZaloVC()
+    private let meVC =  HomeVC()
 
     private var currentVC: UIViewController?
 
-    private let memoryTab = CustomTabView(title: "Memory", image: UIImage(systemName: "clock"))
-    private let favoriteTab = CustomTabView(title: "Yêu thích", image: UIImage(systemName: "heart.fill"))
-    private let homeTab = CustomTabView(title: "Album", image: UIImage(systemName: "photo.on.rectangle"))
+    private let messagesTab = CustomTabView(title: "Messages", image: UIImage(systemName: "message"))
+    private let contactsTab = CustomTabView(title: "Contacts", image: UIImage(systemName: "person"))
+    private let discoveryTab = CustomTabView(title: "Discovery", image: UIImage(systemName: "square.grid.2x2"))
+    private let timelineTab = CustomTabView(title: "Timeline", image: UIImage(systemName: "clock"))
+    private let meTab = CustomTabView(title: "Me", image: UIImage(systemName: "person.crop.circle"))
 
     private let tabBarView = UIView()
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // ...
         setupTabBar()
-        switchTo(viewController: memoryVC)
-        updateTabColors(active: memoryTab)
+        switchTo(viewController: messagesVC)
+        updateTabColors(active: messagesTab)
 
-        // Ví dụ set badge:
-        memoryTab.setBadge(count: 5)
-        favoriteTab.setBadge(count: 0)  // ẩn badge
-        homeTab.setBadge(count: 10)
+        messagesTab.setBadge(text: "5+")
+        contactsTab.setBadge(text: "")
+        discoveryTab.setBadge(text: "N")
+        timelineTab.setBadge(text: "5+")
+        meTab.setBadge(text: "!")
     }
-
 
     private func setupTabBar() {
         tabBarView.backgroundColor = .white
@@ -44,26 +47,16 @@ class MainTabBarVC: UIViewController {
             tabBarView.heightAnchor.constraint(equalToConstant: 90)
         ])
 
-        memoryTab.tapAction = { [weak self] in
-            self?.switchTo(viewController: self!.memoryVC)
-            self?.updateTabColors(active: self!.memoryTab)
-        }
+        messagesTab.tapAction = { [weak self] in self?.selectTab(vc: self!.messagesVC, tab: self!.messagesTab) }
+        contactsTab.tapAction = { [weak self] in self?.selectTab(vc: self!.contactsVC, tab: self!.contactsTab) }
+        discoveryTab.tapAction = { [weak self] in self?.selectTab(vc: self!.discoveryVC, tab: self!.discoveryTab) }
+        timelineTab.tapAction = { [weak self] in self?.selectTab(vc: self!.timelineVC, tab: self!.timelineTab) }
+        meTab.tapAction = { [weak self] in self?.selectTab(vc: self!.meVC, tab: self!.meTab) }
 
-        favoriteTab.tapAction = { [weak self] in
-            self?.switchTo(viewController: self!.favoriteVC)
-            self?.updateTabColors(active: self!.favoriteTab)
-        }
-
-        homeTab.tapAction = { [weak self] in
-            self?.switchTo(viewController: self!.homeVC)
-            self?.updateTabColors(active: self!.homeTab)
-        }
-
-        let stackView = UIStackView(arrangedSubviews: [memoryTab, favoriteTab, homeTab])
+        let stackView = UIStackView(arrangedSubviews: [messagesTab, contactsTab, discoveryTab, timelineTab, meTab])
         stackView.axis = .horizontal
         stackView.distribution = .fillEqually
         stackView.translatesAutoresizingMaskIntoConstraints = false
-
         tabBarView.addSubview(stackView)
 
         NSLayoutConstraint.activate([
@@ -74,36 +67,27 @@ class MainTabBarVC: UIViewController {
         ])
     }
 
+    private func selectTab(vc: UIViewController, tab: CustomTabView) {
+        switchTo(viewController: vc)
+        updateTabColors(active: tab)
+    }
+
     private func updateTabColors(active: CustomTabView) {
-        [memoryTab, favoriteTab, homeTab].forEach { $0.setActive($0 == active) }
+        [messagesTab, contactsTab, discoveryTab, timelineTab, meTab].forEach {
+            $0.setActive($0 == active)
+        }
     }
 
     private func switchTo(viewController: UIViewController) {
-        if let current = currentVC {
-            current.willMove(toParent: nil)
-            current.view.removeFromSuperview()
-            current.removeFromParent()
-        }
+        currentVC?.willMove(toParent: nil)
+        currentVC?.view.removeFromSuperview()
+        currentVC?.removeFromParent()
 
         addChild(viewController)
         view.insertSubview(viewController.view, belowSubview: tabBarView)
         viewController.view.frame = view.bounds
         viewController.didMove(toParent: self)
         currentVC = viewController
-
-        view.bringSubviewToFront(tabBarView)
-    }
-}
-
-
-
-extension MainTabBarVC: FeedVCDelegate,HomeVCDelegate {
-    func presentVC(at vc: UIViewController) {
-        self.present(vc, animated: true, completion: nil)
-    }
-
-    func pushVC(at vc: UIViewController) {
-        self.navigationController?.pushViewController(vc, animated: true)
     }
 }
 
