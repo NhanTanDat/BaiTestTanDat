@@ -1,13 +1,14 @@
-//
-//  HeaderResearchView.swift
-//  DemoTanDat
-//
-//  Created by Đại Lợi Đẹp Trai on 15/5/25.
-//
-
 import UIKit
 
+// MARK: - Protocol delegate cho HeaderResearchView
+protocol HeaderResearchViewDelegate: AnyObject {
+    func headerResearchView(_ headerView: HeaderResearchView, didChangeSearchText text: String)
+}
+
 class HeaderResearchView: UIView {
+    
+    weak var delegate: HeaderResearchViewDelegate?
+    
     let magnifyingglassImg: UIImageView = {
         let imgView = UIImageView()
         imgView.image = UIImage(systemName: "magnifyingglass")
@@ -22,13 +23,7 @@ class HeaderResearchView: UIView {
         return imgView
     }()
     
-    lazy var SearchLable: UILabel = {
-        let label = UILabel()
-        label.textColor = .white
-        label.font = UIFont.systemFont(ofSize: 17, weight: .medium)
-        label.text = "Search"
-        return label
-    }()
+    let bellButton = UIButton(type: .system)
     
     let badgeLabel: UILabel = {
         let label = UILabel()
@@ -43,17 +38,31 @@ class HeaderResearchView: UIView {
         return label
     }()
     
-    let bellButton = UIButton(type: .system)
+    let searchTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Tìm kiếm"
+        textField.textColor = .white
+        textField.tintColor = .white
+        textField.borderStyle = .none
+        textField.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+        textField.layer.cornerRadius = 8
+        textField.clipsToBounds = true
+        textField.font = UIFont.systemFont(ofSize: 15)
+        textField.setLeftPaddingPoints(8)
+        return textField
+    }()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .systemBlue
         setupView()
+        searchTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupView()
+        searchTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
     }
     
     private func setupView() {
@@ -68,13 +77,13 @@ class HeaderResearchView: UIView {
             badgeLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 26),
             badgeLabel.heightAnchor.constraint(equalToConstant: 20)
         ])
-    
-        SearchLable.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        SearchLable.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
-        let stack = UIStackView(arrangedSubviews: [magnifyingglassImg, SearchLable, img, bellButton])
+        searchTextField.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        searchTextField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        
+        let stack = UIStackView(arrangedSubviews: [magnifyingglassImg, searchTextField, img, bellButton])
         stack.axis = .horizontal
-        stack.spacing = 20
+        stack.spacing = 12
         stack.alignment = .center
         stack.distribution = .fill
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -82,20 +91,50 @@ class HeaderResearchView: UIView {
         addSubview(stack)
         
         NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: topAnchor),
-            stack.bottomAnchor.constraint(equalTo: bottomAnchor),
+            stack.topAnchor.constraint(equalTo: topAnchor, constant: 8),
+            stack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8),
             stack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
             stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
             
-            magnifyingglassImg.widthAnchor.constraint(equalToConstant: 30),
-            magnifyingglassImg.heightAnchor.constraint(equalToConstant: 30),
+            magnifyingglassImg.widthAnchor.constraint(equalToConstant: 24),
+            magnifyingglassImg.heightAnchor.constraint(equalToConstant: 24),
             
             img.widthAnchor.constraint(equalToConstant: 30),
             img.heightAnchor.constraint(equalToConstant: 30),
             
             bellButton.widthAnchor.constraint(equalToConstant: 30),
             bellButton.heightAnchor.constraint(equalToConstant: 30),
+            
+            searchTextField.heightAnchor.constraint(equalToConstant: 36)
         ])
+    }
+    
+    @objc private func textFieldDidChange(_ textField: UITextField) {
+        delegate?.headerResearchView(self, didChangeSearchText: textField.text ?? "")
+    }
+    
+    // MARK: - Public method to hide/show right icons
+    func setRightIconsHidden(_ hidden: Bool, animated: Bool = false) {
+        if animated {
+            UIView.animate(withDuration: 0.3) {
+                self.img.alpha = hidden ? 0 : 1
+                self.bellButton.alpha = hidden ? 0 : 1
+                self.badgeLabel.alpha = hidden ? 0 : 1
+            }
+        } else {
+            img.isHidden = hidden
+            bellButton.isHidden = hidden
+            badgeLabel.isHidden = hidden
+        }
+    }
+}
+
+// MARK: - Padding Extension
+extension UITextField {
+    func setLeftPaddingPoints(_ amount: CGFloat) {
+        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: amount, height: self.frame.height))
+        self.leftView = paddingView
+        self.leftViewMode = .always
     }
 }
 

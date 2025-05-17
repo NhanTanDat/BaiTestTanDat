@@ -12,8 +12,10 @@ struct PostModel {
     let username: String
     let time: String
     let text: String
-    let image: UIImage?
+    let images: [UIImage]
     let linkTitle: String
     let linkSubtitle: String
+    let videoName: String? 
     var isExpandedStates: Bool = false
 }
+

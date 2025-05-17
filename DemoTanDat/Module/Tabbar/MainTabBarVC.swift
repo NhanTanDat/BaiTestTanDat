@@ -1,32 +1,35 @@
 import UIKit
 
-class MainTabBarVC: UIViewController {
+protocol MainTabBarCoordinatorDelegate: AnyObject {
+    func pushViewController(_ viewController: UIViewController, animated: Bool)
+}
 
-    private let messagesVC = FeedNewZaloVC()
-    private let contactsVC = FeedNewZaloVC()
-    private let discoveryVC = FeedVC()
+
+class MainTabBarVC: BaseVC, MainTabBarCoordinatorDelegate {
+
+    private let contactsVC = ContactListVC()
     private let timelineVC = FeedNewZaloVC()
-    private let meVC =  HomeVC()
+    private let meVC = HomeVC()
 
     private var currentVC: UIViewController?
 
-    private let messagesTab = CustomTabView(title: "Messages", image: UIImage(systemName: "message"))
     private let contactsTab = CustomTabView(title: "Contacts", image: UIImage(systemName: "person"))
-    private let discoveryTab = CustomTabView(title: "Discovery", image: UIImage(systemName: "square.grid.2x2"))
-    private let timelineTab = CustomTabView(title: "Timeline", image: UIImage(systemName: "clock"))
+    private let timelineTab = CustomTabView(title: "Newfeed", image: UIImage(systemName: "clock"))
     private let meTab = CustomTabView(title: "Me", image: UIImage(systemName: "person.crop.circle"))
 
     private let tabBarView = UIView()
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Gán delegate
+        contactsVC.delegate = self
+       
         setupTabBar()
-        switchTo(viewController: messagesVC)
-        updateTabColors(active: messagesTab)
+        switchTo(viewController: timelineVC)
+        updateTabColors(active: timelineTab)
 
-        messagesTab.setBadge(text: "5+")
         contactsTab.setBadge(text: "")
-        discoveryTab.setBadge(text: "N")
         timelineTab.setBadge(text: "5+")
         meTab.setBadge(text: "!")
     }
@@ -47,13 +50,11 @@ class MainTabBarVC: UIViewController {
             tabBarView.heightAnchor.constraint(equalToConstant: 90)
         ])
 
-        messagesTab.tapAction = { [weak self] in self?.selectTab(vc: self!.messagesVC, tab: self!.messagesTab) }
         contactsTab.tapAction = { [weak self] in self?.selectTab(vc: self!.contactsVC, tab: self!.contactsTab) }
-        discoveryTab.tapAction = { [weak self] in self?.selectTab(vc: self!.discoveryVC, tab: self!.discoveryTab) }
         timelineTab.tapAction = { [weak self] in self?.selectTab(vc: self!.timelineVC, tab: self!.timelineTab) }
         meTab.tapAction = { [weak self] in self?.selectTab(vc: self!.meVC, tab: self!.meTab) }
 
-        let stackView = UIStackView(arrangedSubviews: [messagesTab, contactsTab, discoveryTab, timelineTab, meTab])
+        let stackView = UIStackView(arrangedSubviews: [timelineTab, contactsTab, meTab])
         stackView.axis = .horizontal
         stackView.distribution = .fillEqually
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -73,7 +74,7 @@ class MainTabBarVC: UIViewController {
     }
 
     private func updateTabColors(active: CustomTabView) {
-        [messagesTab, contactsTab, discoveryTab, timelineTab, meTab].forEach {
+        [contactsTab, timelineTab, meTab].forEach {
             $0.setActive($0 == active)
         }
     }
@@ -88,6 +89,11 @@ class MainTabBarVC: UIViewController {
         viewController.view.frame = view.bounds
         viewController.didMove(toParent: self)
         currentVC = viewController
+    }
+
+    // MARK: - Delegate Push
+    func pushViewController(_ viewController: UIViewController, animated: Bool) {
+        self.navigationController?.pushViewController(viewController, animated: animated)
     }
 }
 
