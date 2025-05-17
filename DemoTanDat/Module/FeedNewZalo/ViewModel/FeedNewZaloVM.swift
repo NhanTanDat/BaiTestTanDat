@@ -26,7 +26,7 @@ class FeedNewZaloVM {
             ),
             PostModel(
                 avatar: UIImage(named: "a2")!,
-                username: "Lê Hồng Nhung",
+                username: "Nguyễn Thảo Nhi",
                 time: "1 hour ago",
                 text: "Mình vừa hoàn thành xong dự án thiết kế nội thất cho căn hộ nhỏ 40m². Cảm giác thật sự mãn nguyện!",
                 images: [UIImage(named: "img3")!],
@@ -36,7 +36,7 @@ class FeedNewZaloVM {
             ),
             PostModel(
                 avatar: UIImage(named: "a3")!,
-                username: "Phạm Bảo Hân",
+                username: "Nguyễn Thảo Nhi",
                 time: "2 hours ago",
                 text: "Vừa được thăng chức trưởng nhóm marketing! Cảm ơn những người đã luôn tin tưởng và đồng hành cùng mình.",
                 images: [],
@@ -46,7 +46,7 @@ class FeedNewZaloVM {
             ),
             PostModel(
                 avatar: UIImage(named: "a4")!,
-                username: "Đoàn Mỹ Linh",
+                username: "Nguyễn Thảo Nhi",
                 time: "3 hours ago",
                 text: "Check-in sự kiện công nghệ tại TP.HCM. Nhiều điều thú vị và đầy cảm hứng!",
                 images: [UIImage(named: "img2")!, UIImage(named: "img4")!],
@@ -56,7 +56,7 @@ class FeedNewZaloVM {
             ),
             PostModel(
                 avatar: UIImage(named: "a1")!,
-                username: "Trịnh Ngọc Hân",
+                username: "Lê Hồng Nhung",
                 time: "5 hours ago",
                 text: "Mỗi sáng thức dậy là một cơ hội mới để phát triển bản thân. Cố gắng mỗi ngày nhé 💪",
                 images: [],
@@ -66,7 +66,7 @@ class FeedNewZaloVM {
             ),
             PostModel(
                 avatar: UIImage(named: "a2")!,
-                username: "Nguyễn Thị Trúc Mai",
+                username: "Lê Hồng Nhung",
                 time: "6 hours ago",
                 text: "Đà Nẵng thật sự là thành phố đáng sống, đồ ăn ngon, con người thân thiện!",
                 images: [UIImage(named: "img1")!, UIImage(named: "img3")!],
@@ -76,7 +76,7 @@ class FeedNewZaloVM {
             ),
             PostModel(
                 avatar: UIImage(named: "a3")!,
-                username: "Lý Hồng Nhung",
+                username: "Lê Hồng Nhung",
                 time: "Yesterday",
                 text: "Vừa nhận học bổng toàn phần chương trình Thạc sĩ tại Pháp. Một hành trình mới đang bắt đầu 🇫🇷",
                 images: [],
@@ -86,7 +86,7 @@ class FeedNewZaloVM {
             ),
             PostModel(
                 avatar: UIImage(named: "a4")!,
-                username: "Đinh Thị Mỹ Hạnh",
+                username: "Phạm Bảo Hân",
                 time: "Yesterday",
                 text: "Mình đã bắt đầu viết nhật ký mỗi ngày. Cảm giác được sống chậm lại, hiểu bản thân hơn 🌿",
                 images: [],
@@ -96,7 +96,7 @@ class FeedNewZaloVM {
             ),
             PostModel(
                 avatar: UIImage(named: "a1")!,
-                username: "Ngô Thị Mai",
+                username: "Phạm Bảo Hân",
                 time: "2 days ago",
                 text: "Tối nay nấu món bún riêu cua cho cả nhà, ai cũng khen ngon 🥰",
                 images: [UIImage(named: "img4")!],
@@ -106,7 +106,7 @@ class FeedNewZaloVM {
             ),
             PostModel(
                 avatar: UIImage(named: "a2")!,
-                username: "Nguyễn Thảo My",
+                username: "Phạm Bảo Hân",
                 time: "3 days ago",
                 text: "Làm mẹ là hành trình đầy yêu thương và cũng đầy thử thách. Mỗi ngày là một món quà 💕",
                 images: [],
@@ -116,7 +116,7 @@ class FeedNewZaloVM {
             ),
             PostModel(
                 avatar: UIImage(named: "a3")!,
-                username: "Phạm Minh Châu",
+                username: "Phạm Bảo Hân",
                 time: "30 minutes ago",
                 text: "Hôm nay trời đẹp quá, tranh thủ dắt mèo đi dạo 🐱🌞",
                 images: [UIImage(named: "img1")!, UIImage(named: "img4")!],
@@ -126,7 +126,7 @@ class FeedNewZaloVM {
             ),
             PostModel(
                 avatar: UIImage(named: "a3")!,
-                username: "Phạm Minh Châu",
+                username: "Đoàn Mỹ Linh",
                 time: "4 hours ago",
                 text: "Làm vlog hướng dẫn makeup tự nhiên, ai xem rồi góp ý giúp mình với nhé 💄",
                 images: [],
@@ -136,7 +136,7 @@ class FeedNewZaloVM {
             ),
             PostModel(
                 avatar: UIImage(named: "a3")!,
-                username: "Phạm Minh Châu",
+                username: "Đoàn Mỹ Linh",
                 time: "2 days ago",
                 text: "Thử thách không dùng mạng xã hội trong 24 giờ. Bạn có dám thử? 📵",
                 images: [],
@@ -153,8 +153,10 @@ class FeedNewZaloVM {
     func filterPosts(with keyword: String) {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
+            isFiltering = false
             filteredPosts = posts
         } else {
+            isFiltering = true
             filteredPosts = posts.filter {
                 $0.username.localizedCaseInsensitiveContains(trimmed) ||
                 $0.text.localizedCaseInsensitiveContains(trimmed)
@@ -208,6 +210,22 @@ class FeedNewZaloVM {
             snapshotData.append(SnapshotItem(image: femaleIMG[i], avatar: femaleAvatars[i], name: femaleNames[i]))
         }
         return snapshotData
+    }
+    
+    // MARK: - Load More (append data cũ vào)
+    func loadMorePosts(completion: (() -> Void)? = nil) {
+        // Append chính posts hiện tại vào posts (data cũ)
+        let morePosts = posts
+        posts.append(contentsOf: morePosts)
+        
+        // Nếu không đang filter thì append filteredPosts luôn
+        if !isFiltering {
+            filteredPosts.append(contentsOf: morePosts)
+        }
+        // Cập nhật trạng thái expand
+        isExpandedStates.append(contentsOf: Array(repeating: false, count: morePosts.count))
+        
+        completion?()
     }
 }
 

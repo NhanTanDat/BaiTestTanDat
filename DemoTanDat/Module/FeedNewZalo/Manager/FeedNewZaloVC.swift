@@ -4,20 +4,22 @@ class FeedNewZaloVC: UIViewController {
 
     let headerView = HeaderResearchView()
     let tableView = UITableView()
-    
+    private let spinnerFooter = UIActivityIndicatorView(style: .medium)
+
     let viewModel = FeedNewZaloVM()
+    var isLoadingMore = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBlue
-        
+
         setupHeader()
         setupTableView()
-        
+
         tableView.register(UserPostActionCell.self, forCellReuseIdentifier: UserPostActionCell.identifier)
         tableView.register(SnapshotCell.self, forCellReuseIdentifier: SnapshotCell.identifier)
         tableView.register(PostCell.self, forCellReuseIdentifier: PostCell.identifier)
-        
+
         headerView.delegate = self
     }
 
@@ -35,25 +37,41 @@ class FeedNewZaloVC: UIViewController {
     func setupTableView() {
         tableView.separatorStyle = .none
         tableView.showsVerticalScrollIndicator = false
-        tableView.showsHorizontalScrollIndicator = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.bounces = true
         tableView.alwaysBounceVertical = true
-        
+
         view.addSubview(tableView)
-        
+
         tableView.delegate = self
         tableView.dataSource = self
-        
+
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 200
-        
+
+        spinnerFooter.hidesWhenStopped = true
+        spinnerFooter.frame = CGRect(x: 0, y: 0, width: view.frame.size.width, height: 50)
+        tableView.tableFooterView = spinnerFooter
+
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: headerView.bottomAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -90)
         ])
+    }
+
+    private func loadMorePostsIfNeeded() {
+        guard !isLoadingMore else { return }
+        isLoadingMore = true
+        spinnerFooter.startAnimating()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.viewModel.loadMorePosts() // append thêm data
+            self.tableView.reloadData()
+            self.spinnerFooter.stopAnimating()
+            self.isLoadingMore = false
+        }
     }
 }
 
@@ -107,6 +125,11 @@ extension FeedNewZaloVC: UITableViewDelegate, UITableViewDataSource, PostCellDel
                 }
             })
         }
+
+        // Load more khi gần đến cuối
+        if indexPath.row == viewModel.numberOfRows() - 1 {
+            loadMorePostsIfNeeded()
+        }
     }
 
     func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {
@@ -129,7 +152,8 @@ extension FeedNewZaloVC: UIScrollViewDelegate {
         if scrollView.contentOffset.y < 0 {
             scrollView.contentOffset.y = 0
         }
-      
+
+        view.endEditing(true)
         pauseAllVisibleVideos()
     }
 
@@ -142,7 +166,7 @@ extension FeedNewZaloVC: UIScrollViewDelegate {
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         playVisibleVideos()
     }
-    
+
     private func pauseAllVisibleVideos() {
         for cell in tableView.visibleCells {
             if let postCell = cell as? PostCell {
@@ -150,7 +174,7 @@ extension FeedNewZaloVC: UIScrollViewDelegate {
             }
         }
     }
-    
+
     private func playVisibleVideos() {
         for cell in tableView.visibleCells {
             if let postCell = cell as? PostCell {
