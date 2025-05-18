@@ -9,7 +9,7 @@ class MainTabBarVC: BaseVC, MainTabBarCoordinatorDelegate {
 
     private let contactsVC = ContactListVC()
     private let timelineVC = FeedNewZaloVC()
-    private let meVC = HomeVC()
+    private let meVC = ContactListVC()
 
     private var currentVC: UIViewController?
 

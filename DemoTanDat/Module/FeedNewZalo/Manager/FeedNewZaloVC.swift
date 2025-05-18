@@ -1,4 +1,6 @@
 import UIKit
+import Lightbox
+import GSPlayer
 
 class FeedNewZaloVC: UIViewController {
 
@@ -83,7 +85,34 @@ extension FeedNewZaloVC: HeaderResearchViewDelegate {
     }
 }
 
-extension FeedNewZaloVC: UITableViewDelegate, UITableViewDataSource, PostCellDelegate {
+extension FeedNewZaloVC: UITableViewDelegate, UITableViewDataSource, PostCellDelegate,SnapshotCellDelegate {
+    
+    func snapshotCell(_ cell: SnapshotCell, didTapItemAt index: Int, image: UIImage) {
+        let lightboxImages = [LightboxImage(image: image)]
+        let controller = LightboxController(images: lightboxImages, startIndex: 0)
+        controller.dynamicBackground = true
+        present(controller, animated: true)
+    }
+    
+    func didTapImage(at index: Int, in cell: PostCell, images: [UIImage]) {
+        let lightboxImages = images.map { LightboxImage(image: $0) }
+        let controller = LightboxController(images: lightboxImages, startIndex: index)
+        controller.dynamicBackground = true
+        present(controller, animated: true, completion: nil)
+    }
+    
+    func didTapVideo(in cell: PostCell,  url: String) {
+        guard let path = Bundle.main.path(forResource: url, ofType: "mp4") else {
+            print("Không tìm thấy file video.")
+            return
+        }
+
+        let videoURL = URL(fileURLWithPath: path)
+        let vc = VideoPlayerVC()
+        vc.videoURL = videoURL
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return viewModel.numberOfRows()
@@ -102,6 +131,7 @@ extension FeedNewZaloVC: UITableViewDelegate, UITableViewDataSource, PostCellDel
                 return UITableViewCell()
             }
             cell.configure(with: viewModel.snapshotItems())
+            cell.delegate = self
             return cell
 
         } else {
@@ -125,8 +155,6 @@ extension FeedNewZaloVC: UITableViewDelegate, UITableViewDataSource, PostCellDel
                 }
             })
         }
-
-        // Load more khi gần đến cuối
         if indexPath.row == viewModel.numberOfRows() - 1 {
             loadMorePostsIfNeeded()
         }
@@ -187,4 +215,3 @@ extension FeedNewZaloVC: UIScrollViewDelegate {
         }
     }
 }
-

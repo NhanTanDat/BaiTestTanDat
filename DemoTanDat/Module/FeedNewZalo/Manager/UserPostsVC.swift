@@ -1,4 +1,6 @@
 import UIKit
+import Lightbox
+import GSPlayer
 
 class UserPostsVC: BaseVC {
 
@@ -101,6 +103,29 @@ class UserPostsVC: BaseVC {
 // MARK: - UITableViewDataSource & Delegate
 
 extension UserPostsVC: UITableViewDataSource, UITableViewDelegate, PostCellDelegate {
+    func didTapImage(at index: Int, in cell: PostCell, images: [UIImage]) {
+        // Chuyển mảng UIImage thành LightboxImage
+        let lightboxImages = images.map { LightboxImage(image: $0) }
+        
+        // Khởi tạo LightboxController với các ảnh
+        let controller = LightboxController(images: lightboxImages, startIndex: index)
+        
+        controller.dynamicBackground = true
+        
+        present(controller, animated: true, completion: nil)
+    }
+    func didTapVideo(in cell: PostCell,  url: String) {
+        guard let path = Bundle.main.path(forResource: url, ofType: "mp4") else {
+            print("Không tìm thấy file video.")
+            return
+        }
+
+        let videoURL = URL(fileURLWithPath: path)
+        let vc = VideoPlayerVC()
+        vc.videoURL = videoURL
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return userPosts.count
     }

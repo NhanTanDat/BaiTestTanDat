@@ -1,7 +1,15 @@
 import UIKit
 
+protocol SnapshotCellDelegate: AnyObject {
+    func snapshotCell(_ cell: SnapshotCell, didTapItemAt index: Int, image: UIImage)
+}
+
 class SnapshotCell: UITableViewCell {
+    weak var delegate: SnapshotCellDelegate?
+    
     static let identifier = "SnapshotCell"
+    
+    var images : [UIImage] = []
     
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -77,11 +85,26 @@ class SnapshotCell: UITableViewCell {
     }
     
     func configure(with items: [SnapshotItem]) {
-        imageStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        
-        for item in items {
-            let itemView = SnapshotItemView(item: item)
-            imageStackView.addArrangedSubview(itemView)
-        }
-    }
+           imageStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            images = items.map { $0.image }
+
+           for (index, item) in items.enumerated() {
+               let itemView = SnapshotItemView(item: item)
+               itemView.tag = index
+
+               let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+               itemView.addGestureRecognizer(tapGesture)
+               itemView.isUserInteractionEnabled = true
+
+               imageStackView.addArrangedSubview(itemView)
+           }
+       }
+
+       @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
+           guard let view = gesture.view else { return }
+           let index = view.tag
+           guard index < images.count else { return }
+           let tappedImage = images[index]
+           delegate?.snapshotCell(self, didTapItemAt: index, image: tappedImage)
+       }
 }

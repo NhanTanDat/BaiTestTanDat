@@ -7,7 +7,14 @@
 
 import UIKit
 
+protocol PostImageGalleryViewDelegate: AnyObject {
+    func imageGalleryView(_ view: PostImageGalleryView, didTapImageAt index: Int, images: [UIImage])
+}
+
+
 class PostImageGalleryView: UIView {
+    weak var delegate: PostImageGalleryViewDelegate?
+    
     private var images: [UIImage] = []
 
     private let collectionView: UICollectionView = {
@@ -53,6 +60,10 @@ class PostImageGalleryView: UIView {
 extension PostImageGalleryView: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return min(images.count, 9)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        delegate?.imageGalleryView(self, didTapImageAt: indexPath.item, images: images)
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {

@@ -4,9 +4,13 @@ import AVFoundation
 
 protocol PostCellDelegate: AnyObject {
     func didUpdateCell(_ cell: PostCell)
+    func didTapImage(at index: Int, in cell: PostCell, images: [UIImage])
+    func didTapVideo(in cell: PostCell,url: String)
 }
 
-class PostCell: UITableViewCell, ExpandableTextViewDelegate {
+class PostCell: UITableViewCell, ExpandableTextViewDelegate,PostImageGalleryViewDelegate {
+  
+    
     static let identifier = "PostCell"
 
     private let headerView = PostHeaderView()
@@ -17,6 +21,7 @@ class PostCell: UITableViewCell, ExpandableTextViewDelegate {
     private let likeView = LikeView()
     private let commentButton = UIButton(type: .system)
     private let actionStack = UIStackView()
+    private var url: String = ""
 
     private let separatorLine: UIView = {
         let view = UIView()
@@ -51,6 +56,9 @@ class PostCell: UITableViewCell, ExpandableTextViewDelegate {
     }
 
     private func setupViews() {
+        
+        imageGalleryView.delegate = self
+        
         selectionStyle = .none
 
         commentButton.setTitle("Bình luận", for: .normal)
@@ -125,6 +133,11 @@ class PostCell: UITableViewCell, ExpandableTextViewDelegate {
         actionStack.bottomAnchor.constraint(equalTo: separatorLine.topAnchor, constant: -12).isActive = true
 
         textView.expandDelegate = self
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleVideoTap))
+        videoContainerView.addGestureRecognizer(tapGesture)
+        videoContainerView.isUserInteractionEnabled = true
+
     }
 
     override func layoutSubviews() {
@@ -132,12 +145,22 @@ class PostCell: UITableViewCell, ExpandableTextViewDelegate {
         contentView.layoutIfNeeded()
         playerLayer?.frame = CGRect(x: 0, y: 0, width: contentView.bounds.width, height: videoHeightConstraint?.constant ?? 0)
     }
+    
+    @objc private func handleVideoTap() {
+        delegate?.didTapVideo(in: self, url: self.url)
+    }
 
+    
+    func imageGalleryView(_ view: PostImageGalleryView, didTapImageAt index: Int, images: [UIImage]) {
+        delegate?.didTapImage(at: index, in: self, images: images)
+    }
+    
     func configure(with post: PostModel) {
         isExpanded = post.isExpandedStates
         headerView.configure(avatar: post.avatar, name: post.username, time: post.time)
         textView.fullText = post.text
         textView.isExpanded = isExpanded
+        self.url = post.videoName ?? ""
 
         if !post.images.isEmpty {
             imageGalleryView.isHidden = false

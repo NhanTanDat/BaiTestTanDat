@@ -1,0 +1,28 @@
+PODS:
+  - Cache (6.0.0)
+  - GSPlayer (0.2.28)
+  - Imaginary (5.0.0):
+    - Cache (~> 6.0.0)
+  - Lightbox (2.5.0):
+    - Imaginary (~> 5.0.0)
+
+DEPENDENCIES:
+  - GSPlayer
+  - Lightbox
+
+SPEC REPOS:
+  trunk:
+    - Cache
+    - GSPlayer
+    - Imaginary
+    - Lightbox
+
+SPEC CHECKSUMS:
+  Cache: 4ca7e00363fca5455f26534e5607634c820ffc2d
+  GSPlayer: 1211d3f6db92affea4d504c10d49421273105abd
+  Imaginary: cf5e3a7dd6ab1dcbd47ba8ce5edf2307c4e99eb3
+  Lightbox: cc3d5124f024fa8197fd23f913160db1c61a1852
+
+PODFILE CHECKSUM: 2aeabcbe8f7b480eec9d951984151af0f26bb7c6
+
+COCOAPODS: 1.16.2
